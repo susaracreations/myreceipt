@@ -107,6 +107,10 @@
             <div>
                 <label for="receiptNumber" class="block text-sm font-medium text-gray-700">Receipt Number</label>
                 <input type="text" id="receiptNumber" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" readonly>
+                <div class="mt-2 flex items-center">
+                    <input type="checkbox" id="customReceiptNumberToggle" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label for="customReceiptNumberToggle" class="ml-2 block text-sm text-gray-900">Custom Receipt Number</label>
+                </div>
             </div>
             <div>
                 <label for="receiptDate" class="block text-sm font-medium text-gray-700">Date</label>
@@ -242,6 +246,7 @@
             const businessAddressInput = document.getElementById('businessAddress');
             const businessContactInput = document.getElementById('businessContact');
             const receiptNumberInput = document.getElementById('receiptNumber');
+            const customReceiptNumberToggle = document.getElementById('customReceiptNumberToggle'); // New toggle
             const receiptDateInput = document.getElementById('receiptDate');
             const receiptTimeInput = document.getElementById('receiptTime');
             const customerNameInput = document.getElementById('customerName');
@@ -332,7 +337,9 @@
                     customerPhone: customerPhoneInput.value,
                     taxRate: taxRateInput.value,
                     paymentMethod: paymentMethodSelect.value,
-                    items: items // items array
+                    items: items, // items array
+                    isCustomReceiptNumber: customReceiptNumberToggle.checked, // Save toggle state
+                    customReceiptNumber: receiptNumberInput.value // Save current value if custom
                 };
                 localStorage.setItem('receiptAppData', JSON.stringify(data));
                 console.log('App data saved to LocalStorage.');
@@ -350,6 +357,15 @@
                     taxRateInput.value = data.taxRate || DEFAULT_TAX_RATE;
                     paymentMethodSelect.value = data.paymentMethod || 'Cash';
                     items = data.items || DEFAULT_ITEMS; // Load saved items or use default
+
+                    // Load custom receipt number toggle state and value
+                    customReceiptNumberToggle.checked = data.isCustomReceiptNumber || false;
+                    if (customReceiptNumberToggle.checked) {
+                        receiptNumberInput.value = data.customReceiptNumber || '';
+                    } else {
+                        updateReceiptNumber(); // Generate if not custom
+                    }
+                    toggleReceiptNumberInput(); // Set input state based on toggle
                 } else {
                     // Set default values if no data in localStorage
                     businessNameInput.value = DEFAULT_BUSINESS_NAME;
@@ -358,6 +374,7 @@
                     taxRateInput.value = DEFAULT_TAX_RATE;
                     paymentMethodSelect.value = 'Cash';
                     items = DEFAULT_ITEMS;
+                    updateReceiptNumber(); // Generate initial receipt number
                 }
                 renderItems(); // Render items after loading
             };
@@ -373,10 +390,25 @@
             };
 
             const updateReceiptNumber = () => {
-                const nextReceiptNum = getNextReceiptNumber();
-                receiptNumberInput.value = nextReceiptNum;
-                // No need to save lastReceiptNumber here; it's saved after print/download
+                if (!customReceiptNumberToggle.checked) {
+                    const nextReceiptNum = getNextReceiptNumber();
+                    receiptNumberInput.value = nextReceiptNum;
+                }
+                // If custom is checked, we don't change the input value here.
             };
+
+            // Function to toggle receipt number input readonly state
+            const toggleReceiptNumberInput = () => {
+                receiptNumberInput.readOnly = !customReceiptNumberToggle.checked;
+                if (!customReceiptNumberToggle.checked) {
+                    updateReceiptNumber(); // Generate new number if switching back to auto
+                }
+                saveAllData(); // Save state of the toggle and input
+            };
+
+            // Event listener for the custom receipt number toggle
+            customReceiptNumberToggle.addEventListener('change', toggleReceiptNumberInput);
+            receiptNumberInput.addEventListener('input', saveAllData); // Save custom number when typed
 
             // Function to update the time input field
             const updateTimeInput = () => {
@@ -386,16 +418,20 @@
                 receiptTimeInput.value = `${hh}:${min}`;
             };
 
-            // Set current date and initial receipt number
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear(); 
+            // Function to update the date input field
+            const updateDateInput = () => {
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2, '0');
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const yyyy = now.getFullYear(); 
+                receiptDateInput.value = `${yyyy}-${mm}-${dd}`;
+            };
 
-            receiptDateInput.value = `${yyyy}-${mm}-${dd}`;
-            updateReceiptNumber(); // Set the sequential receipt number on load
+            // Set initial date and time, and start updating them
+            updateDateInput(); // Set initial date
             updateTimeInput(); // Set initial time
             setInterval(updateTimeInput, 1000); // Update time every second
+            setInterval(updateDateInput, 60 * 1000); // Update date every minute
 
             // Add input listeners for saving data on change
             businessNameInput.addEventListener('input', saveAllData);
@@ -411,9 +447,9 @@
                 document.getElementById('printBusinessName').textContent = businessNameInput.value;
                 document.getElementById('printBusinessAddress').textContent = businessAddressInput.value;
                 document.getElementById('printBusinessContact').textContent = businessContactInput.value;
-                document.getElementById('printReceiptNumber').textContent = receiptNumberInput.value;
-                document.getElementById('printReceiptDate').textContent = receiptDateInput.value;
-                document.getElementById('printReceiptTime').textContent = receiptTimeInput.value; // Get the live updated time
+                document.getElementById('printReceiptNumber').textContent = receiptNumberInput.value; // Use current input value
+                document.getElementById('printReceiptDate').textContent = receiptDateInput.value; 
+                document.getElementById('printReceiptTime').textContent = receiptTimeInput.value; 
                 document.getElementById('printPaymentMethod').textContent = paymentMethodSelect.value;
 
                 const customerName = customerNameInput.value.trim();
@@ -476,36 +512,41 @@
                 populatePrintArea(); // Ensure print area is populated before generating PNG
 
                 const element = document.getElementById('receiptPrintArea');
-                const receiptNumber = receiptNumberInput.value;
+                const receiptNumber = receiptNumberInput.value; // Use current input value
                 const filename = `receipt-${receiptNumber}.png`;
 
                 // Add a small delay to ensure DOM is fully rendered for html2canvas
                 setTimeout(() => {
                     html2canvas(element, {
-                        scale: 2, // Increase scale for better resolution
-                        useCORS: true, // Enable cross-origin image loading if necessary (not needed for local images)
-                        logging: true // Enable logging for debugging
+                        scale: 2, 
+                        useCORS: true, 
+                        logging: true 
                     }).then(canvas => {
-                        const imageDataURL = canvas.toDataURL('image/png'); // Get image data as PNG
+                        const imageDataURL = canvas.toDataURL('image/png'); 
 
-                        // Create a temporary link element for download
                         const link = document.createElement('a');
                         link.href = imageDataURL;
                         link.download = filename;
-                        document.body.appendChild(link); // Append to body (required for Firefox)
-                        link.click(); // Programmatically click the link to trigger download
-                        document.body.removeChild(link); // Clean up the temporary link
+                        document.body.appendChild(link); 
+                        link.click(); 
+                        document.body.removeChild(link); 
 
                         console.log('PNG generated and downloaded.');
                         // Increment receipt number and save to localStorage AFTER successful PNG generation
-                        let currentReceiptNum = parseInt(receiptNumber.replace('REC-', ''));
-                        localStorage.setItem('lastReceiptNumber', currentReceiptNum);
-                        updateReceiptNumber(); // Update the input field for next receipt
+                        // Only increment if not using custom receipt number
+                        if (!customReceiptNumberToggle.checked) {
+                            let currentReceiptNum = parseInt(receiptNumber.replace('REC-', ''));
+                            localStorage.setItem('lastReceiptNumber', currentReceiptNum);
+                            updateReceiptNumber(); // Update the input field for next receipt
+                        } else {
+                            // If custom is enabled, just save current custom value to localStorage
+                            saveAllData();
+                        }
                     }).catch(error => {
                         console.error('Error generating PNG:', error);
                         alert('PNG generation failed. Please try "Print Receipt (Browser Dialog)" option.');
                     });
-                }, 100); // 100ms delay
+                }, 100); 
             });
 
             // Handle Print (Browser Dialog) functionality
