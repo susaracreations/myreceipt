@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for printing */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-area, .print-area * {
+                visibility: visible;
+            }
+            .print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+                box-sizing: border-box;
+                font-family: 'Inter', sans-serif;
+                color: #333;
+                background-color: white; /* Ensure white background for print */
+            }
+            /* Hide elements that should not be printed */
+            .print-area .hide-on-print {
+                display: none !important;
+            }
+            /* Adjust fonts for printing */
+            .print-area h1 {
+                font-size: 1.8rem !important;
+            }
+            .print-area p, .print-area table {
+                font-size: 0.9rem !important;
+            }
+            .print-area th, .print-area td {
+                padding: 4px 2px !important;
+            }
+
+            /* Ensure form elements appear as text in print */
+            input[type="text"], input[type="number"], select {
+                border: none !important;
+                background: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: inherit !important;
+                color: inherit !important;
+                box-shadow: none !important;
+                outline: none !important;
+                -webkit-print-color-adjust: exact; /* For better color accuracy in print */
+                color-adjust: exact;
+            }
+        }
+        /* Inter font from Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 flex flex-col items-center p-4 sm:p-6 md:p-8 text-gray-800">
+    <h1 class="text-3xl sm:text-4xl font-bold text-indigo-700 mb-6 text-center">
+        Generate Receipts for Your Business
+    </h1>
+
+    <div class="w-full max-w-4xl bg-white p-6 sm:p-8 rounded-lg shadow-xl mb-8">
+        <h2 class="text-2xl font-semibold text-indigo-600 mb-6 border-b pb-2">
+            Enter Receipt Details
+        </h2>
+
+        <!-- Business Details Input -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+                <label for="businessName" class="block text-sm font-medium text-gray-700">Business Name</label>
+                <input type="text" id="businessName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="Mama Susara Creations">
+            </div>
+            <div>
+                <label for="businessAddress" class="block text-sm font-medium text-gray-700">Address</label>
+                <input type="text" id="businessAddress" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="123 Main Street, Colombo, Sri Lanka">
+            </div>
+            <div class="md:col-span-2">
+                <label for="businessContact" class="block text-sm font-medium text-gray-700">Phone/Email</label>
+                <input type="text" id="businessContact" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="077-1234567 | info@mamasusara.com">
+            </div>
+        </div>
+
+        <!-- Receipt Specific Details -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+                <label for="receiptNumber" class="block text-sm font-medium text-gray-700">Receipt Number</label>
+                <input type="text" id="receiptNumber" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" readonly>
+            </div>
+            <div>
+                <label for="receiptDate" class="block text-sm font-medium text-gray-700">Date</label>
+                <input type="date" id="receiptDate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="customerName" class="block text-sm font-medium text-gray-700">Customer Name (Optional)</label>
+                <input type="text" id="customerName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+             <!-- New Customer Phone Field -->
+            <div>
+                <label for="customerPhone" class="block text-sm font-medium text-gray-700">Customer Phone (Optional)</label>
+                <input type="text" id="customerPhone" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="mb-6 overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsTableBody" class="bg-white divide-y divide-gray-200">
+                    <!-- Item rows will be dynamically added here -->
+                </tbody>
+            </table>
+            <button id="addItemBtn" class="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors duration-200 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-circle mr-2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                Add Item
+            </button>
+        </div>
+
+        <!-- Totals and Payment -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="md:col-span-1">
+                <label for="taxRate" class="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
+                <input type="number" id="taxRate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="0" min="0">
+            </div>
+            <div class="md:col-span-1">
+                <label for="paymentMethod" class="block text-sm font-medium text-gray-700">Payment Method</label>
+                <select id="paymentMethod" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Mobile Payment">Mobile Payment</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Generate Receipt Button -->
+        <button id="printReceiptBtn" class="w-full py-3 bg-green-600 text-white font-semibold text-lg rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            Print Receipt
+        </button>
+    </div>
+
+    <!-- Printable Receipt Area -->
+    <div id="receiptPrintArea" class="w-full max-w-xl bg-white p-8 rounded-lg shadow-xl print-area">
+        <div class="receipt-header text-center mb-6">
+            <h1 id="printBusinessName" class="text-3xl font-bold text-indigo-800 mb-2"></h1>
+            <p id="printBusinessAddress" class="text-sm text-gray-600"></p>
+            <p id="printBusinessContact" class="text-sm text-gray-600"></p>
+            <div class="border-b-2 border-indigo-200 mt-4 pb-2"></div>
+        </div>
+
+        <div class="receipt-details mb-6 text-sm grid grid-cols-2 gap-2">
+            <div>
+                <p><strong>Receipt Number:</strong> <span id="printReceiptNumber"></span></p>
+                <p><strong>Date:</strong> <span id="printReceiptDate"></span></p>
+            </div>
+            <div class="text-right">
+                <p id="printCustomerNameContainer" class="hide-on-print"><strong id="printCustomerNameLabel">Customer:</strong> <span id="printCustomerName"></span></p>
+                <p id="printCustomerPhoneContainer" class="hide-on-print"><strong>Phone:</strong> <span id="printCustomerPhone"></span></p>
+                <p><strong>Payment Method:</strong> <span id="printPaymentMethod"></span></p>
+            </div>
+        </div>
+
+        <div class="receipt-items mb-6">
+            <table class="w-full text-left table-auto border-collapse">
+                <thead>
+                    <tr class="bg-gray-100 border-b border-gray-300">
+                        <th class="py-2 px-2 text-xs uppercase text-gray-600 w-1/2">Description</th>
+                        <th class="py-2 px-2 text-xs uppercase text-gray-600 w-1/6">Quantity</th>
+                        <th class="py-2 px-2 text-xs uppercase text-gray-600 w-1/6">Unit Price</th>
+                        <th class="py-2 px-2 text-xs uppercase text-gray-600 w-1/6 text-right">Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="printItemsTableBody">
+                    <!-- Printed item rows will be generated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="receipt-totals text-right text-sm">
+            <p class="mb-1"><strong>Subtotal:</strong> Rs. <span id="printSubtotal"></span></p>
+            <p id="printTaxContainer" class="mb-1 hide-on-print"><strong>Tax (<span id="printTaxRate"></span>%):</strong> Rs. <span id="printTaxAmount"></span></p>
+            <p class="text-lg font-bold border-t border-gray-300 pt-2 mt-2">
+                Total Amount: Rs. <span id="printTotal"></span>
+            </p>
+        </div>
+
+        <div class="text-center mt-8 text-xs text-gray-500">
+            <p>Thank you for your business!</p>
+            <p>This is a computer-generated receipt. No signature is required.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Receipt Generator app started. (JavaScript loaded)'); // Debugging log
+
+            // Get DOM elements
+            const businessNameInput = document.getElementById('businessName');
+            const businessAddressInput = document.getElementById('businessAddress');
+            const businessContactInput = document.getElementById('businessContact');
+            const receiptNumberInput = document.getElementById('receiptNumber');
+            const receiptDateInput = document.getElementById('receiptDate');
+            const customerNameInput = document.getElementById('customerName');
+            const customerPhoneInput = document.getElementById('customerPhone'); 
+            const paymentMethodSelect = document.getElementById('paymentMethod');
+            const taxRateInput = document.getElementById('taxRate');
+            const itemsTableBody = document.getElementById('itemsTableBody');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const printReceiptBtn = document.getElementById('printReceiptBtn');
+
+            // Initial data for items
+            let items = [
+                { id: 1, description: 'Product A', quantity: 1, unitPrice: 1000 },
+                { id: 2, description: 'Service B', quantity: 2, unitPrice: 500 },
+            ];
+
+            // Function to format currency
+            const formatCurrency = (amount) => {
+                return parseFloat(amount).toFixed(2);
+            };
+
+            // Function to render items in the input table
+            const renderItems = () => {
+                itemsTableBody.innerHTML = ''; // Clear existing rows
+                items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <input type="text" class="w-full border-0 focus:ring-0 focus:outline-none text-sm" value="${item.description}"
+                                onchange="handleItemChange(${item.id}, 'description', this.value)">
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <input type="number" class="w-20 border-0 focus:ring-0 focus:outline-none text-sm" value="${item.quantity}" min="0"
+                                onchange="handleItemChange(${item.id}, 'quantity', this.value)">
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <input type="number" class="w-24 border-0 focus:ring-0 focus:outline-none text-sm" value="${item.unitPrice}" min="0"
+                                onchange="handleItemChange(${item.id}, 'unitPrice', this.value)">
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm">
+                            ${formatCurrency(item.quantity * item.unitPrice)}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <button onclick="handleRemoveItem(${item.id})" class="text-red-600 hover:text-red-900 transition-colors duration-200" aria-label="Remove item">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-circle"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                            </button>
+                        </td>
+                    `;
+                    itemsTableBody.appendChild(row);
+                });
+            };
+
+            // Function to handle changes in item fields
+            window.handleItemChange = (id, field, value) => {
+                items = items.map(item =>
+                    item.id === id ? { ...item, [field]: field === 'description' ? value : parseFloat(value) || 0 } : item
+                );
+                renderItems(); // Re-render to update totals
+            };
+
+            // Function to add a new item
+            addItemBtn.addEventListener('click', () => {
+                items.push({ id: Date.now(), description: '', quantity: 1, unitPrice: 0 });
+                renderItems();
+            });
+
+            // Function to remove an item
+            window.handleRemoveItem = (id) => {
+                items = items.filter(item => item.id !== id);
+                renderItems();
+            };
+
+            // Set current date and initial receipt number
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear(); 
+            receiptDateInput.value = `${yyyy}-${mm}-${dd}`;
+            receiptNumberInput.value = `REC-${Date.now().toString().slice(-6)}`;
+
+            // Handle print functionality
+            printReceiptBtn.addEventListener('click', () => {
+                console.log('Print receipt initiated.'); // Debugging log for print button
+
+                // Populate print area with current data
+                document.getElementById('printBusinessName').textContent = businessNameInput.value;
+                document.getElementById('printBusinessAddress').textContent = businessAddressInput.value;
+                document.getElementById('printBusinessContact').textContent = businessContactInput.value;
+                document.getElementById('printReceiptNumber').textContent = receiptNumberInput.value;
+                document.getElementById('printReceiptDate').textContent = receiptDateInput.value;
+                document.getElementById('printPaymentMethod').textContent = paymentMethodSelect.value;
+
+                const customerName = customerNameInput.value.trim();
+                const printCustomerNameContainer = document.getElementById('printCustomerNameContainer');
+                if (customerName) {
+                    document.getElementById('printCustomerName').textContent = customerName;
+                    printCustomerNameContainer.classList.remove('hide-on-print');
+                } else {
+                    printCustomerNameContainer.classList.add('hide-on-print');
+                }
+                
+                // Handle customer phone number for print
+                const customerPhone = customerPhoneInput.value.trim();
+                const printCustomerPhoneContainer = document.getElementById('printCustomerPhoneContainer');
+                if (customerPhone) {
+                    document.getElementById('printCustomerPhone').textContent = customerPhone;
+                    printCustomerPhoneContainer.classList.remove('hide-on-print');
+                } else {
+                    printCustomerPhoneContainer.classList.add('hide-on-print');
+                }
+
+
+                const printItemsTableBody = document.getElementById('printItemsTableBody');
+                printItemsTableBody.innerHTML = '';
+                let subtotal = 0;
+                items.forEach(item => {
+                    const row = document.createElement('tr');
+                    const itemTotal = item.quantity * item.unitPrice;
+                    subtotal += itemTotal;
+                    row.classList.add('border-b', 'border-gray-200', 'last:border-b-0');
+                    row.innerHTML = `
+                        <td class="py-2 px-2 text-sm">${item.description}</td>
+                        <td class="py-2 px-2 text-sm">${item.quantity}</td>
+                        <td class="py-2 px-2 text-sm">Rs. ${formatCurrency(item.unitPrice)}</td>
+                        <td class="py-2 px-2 text-sm text-right">Rs. ${formatCurrency(itemTotal)}</td>
+                    `;
+                    printItemsTableBody.appendChild(row);
+                });
+
+                const taxRate = parseFloat(taxRateInput.value) || 0;
+                const taxAmount = subtotal * (taxRate / 100);
+                const total = subtotal + taxAmount;
+
+                document.getElementById('printSubtotal').textContent = formatCurrency(subtotal);
+                
+                const printTaxContainer = document.getElementById('printTaxContainer');
+                if (taxRate > 0) {
+                    document.getElementById('printTaxRate').textContent = taxRate;
+                    document.getElementById('printTaxAmount').textContent = formatCurrency(taxAmount);
+                    printTaxContainer.classList.remove('hide-on-print');
+                } else {
+                    printTaxContainer.classList.add('hide-on-print');
+                }
+                
+                document.getElementById('printTotal').textContent = formatCurrency(total);
+
+                // --- NEW PRINT LOGIC ---
+                const printContents = document.getElementById('receiptPrintArea').innerHTML;
+                
+                const printWindow = window.open('', '_blank', 'height=600,width=800'); 
+                printWindow.document.write('<html><head><title>Receipt</title>');
+                // Include Tailwind CSS for the print window
+                printWindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
+                // Include the custom print styles
+                printWindow.document.write('<style>');
+                printWindow.document.write(`
+                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+                    body { font-family: 'Inter', sans-serif; margin: 0; padding: 20px; box-sizing: border-box; color: #333; }
+                    .print-area { width: 100%; } /* Ensure print area takes full width in print window */
+                    /* Specific styles for print */
+                    .receipt-header h1 { font-size: 1.8rem !important; }
+                    .receipt-details p, .receipt-items table, .receipt-totals p { font-size: 0.9rem !important; }
+                    .receipt-items th, .receipt-items td { padding: 4px 2px !important; }
+                    .hide-on-print { display: none !important; } /* Ensure elements explicitly hidden for print stay hidden */
+                    /* Ensure all text is visible in print */
+                    input[type="text"], input[type="number"], select {
+                        border: none !important;
+                        background: none !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        font-size: inherit !important;
+                        color: inherit !important;
+                        box-shadow: none !important;
+                        outline: none !important;
+                        -webkit-print-color-adjust: exact; /* For better color accuracy in print */
+                        color-adjust: exact;
+                    }
+                `);
+                printWindow.document.write('</style>');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(printContents);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close(); 
+
+                // Wait for the content to render, then print
+                printWindow.onload = function() {
+                    setTimeout(() => {
+                        printWindow.focus(); 
+                        printWindow.print(); 
+                    }, 500); 
+                };
+                // --- END NEW PRINT LOGIC ---
+            });
+
+            // Initial render of items
+            renderItems();
+        });
+    </script>
+</body>
+</html>
