@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt Generator</title>
+    <!-- Favicon link -->
+    <link rel="icon" href="https://susaracreations.github.io/sources/My%20Logo%202.1.png">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvas.js CDN for PNG generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* Custom styles for printing */
         @media print {
@@ -54,6 +58,15 @@
                 -webkit-print-color-adjust: exact; /* For better color accuracy in print */
                 color-adjust: exact;
             }
+            /* Added for better table rendering in image */
+            .print-area table {
+                table-layout: fixed; /* Helps in consistent column width for html2canvas */
+                width: 100%;
+            }
+            .print-area th, .print-area td {
+                word-wrap: break-word; /* Ensure long words break */
+                white-space: normal;   /* Allow text to wrap naturally */
+            }
         }
         /* Inter font from Google Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -63,9 +76,10 @@
     </style>
 </head>
 <body class="min-h-screen bg-gray-100 flex flex-col items-center p-4 sm:p-6 md:p-8 text-gray-800">
-    <h1 class="text-3xl sm:text-4xl font-bold text-indigo-700 mb-6 text-center">
+    <h1 class="text-3xl sm:text-4xl font-bold text-indigo-700 mb-2 text-center">
         Generate Receipts for Your Business
     </h1>
+    <p class="text-lg text-gray-600 mb-6 text-center">Powered by Susara Creations</p>
 
     <div class="w-full max-w-4xl bg-white p-6 sm:p-8 rounded-lg shadow-xl mb-8">
         <h2 class="text-2xl font-semibold text-indigo-600 mb-6 border-b pb-2">
@@ -76,15 +90,15 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
                 <label for="businessName" class="block text-sm font-medium text-gray-700">Business Name</label>
-                <input type="text" id="businessName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="Susara Creations">
+                <input type="text" id="businessName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
             <div>
                 <label for="businessAddress" class="block text-sm font-medium text-gray-700">Address</label>
-                <input type="text" id="businessAddress" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="123 Main Street, Colombo, Sri Lanka">
+                <input type="text" id="businessAddress" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
             <div class="md:col-span-2">
                 <label for="businessContact" class="block text-sm font-medium text-gray-700">Phone/Email</label>
-                <input type="text" id="businessContact" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="077-1234567 | info@susaracreations.com">
+                <input type="text" id="businessContact" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
         </div>
 
@@ -139,7 +153,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div class="md:col-span-1">
                 <label for="taxRate" class="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
-                <input type="number" id="taxRate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="0" min="0">
+                <input type="number" id="taxRate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
             <div class="md:col-span-1">
                 <label for="paymentMethod" class="block text-sm font-medium text-gray-700">Payment Method</label>
@@ -153,11 +167,17 @@
             </div>
         </div>
 
-        <!-- Generate Receipt Button -->
-        <button id="printReceiptBtn" class="w-full py-3 bg-green-600 text-white font-semibold text-lg rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center space-x-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
-            Print Receipt
-        </button>
+        <!-- Generate Receipt Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 mt-6">
+            <button id="downloadPngBtn" class="w-full sm:w-1/2 py-3 bg-indigo-600 text-white font-semibold text-lg rounded-lg shadow-md hover:bg-indigo-700 transition-colors duration-200 flex items-center justify-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image mr-2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                Download Receipt as PNG
+            </button>
+            <button id="printBrowserBtn" class="w-full sm:w-1/2 py-3 bg-green-600 text-white font-semibold text-lg rounded-lg shadow-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                Print Receipt (Browser Dialog)
+            </button>
+        </div>
     </div>
 
     <!-- Printable Receipt Area -->
@@ -208,6 +228,7 @@
 
         <div class="text-center mt-8 text-xs text-gray-500">
             <p>Thank you for your business!</p>
+            <p>Thank you for your payment! We look forward to serving you again.</p>
             <p>This is a computer-generated receipt. No signature is required.</p>
         </div>
     </div>
@@ -229,13 +250,20 @@
             const taxRateInput = document.getElementById('taxRate');
             const itemsTableBody = document.getElementById('itemsTableBody');
             const addItemBtn = document.getElementById('addItemBtn');
-            const printReceiptBtn = document.getElementById('printReceiptBtn');
+            const downloadPngBtn = document.getElementById('downloadPngBtn'); 
+            const printBrowserBtn = document.getElementById('printBrowserBtn'); 
 
-            // Initial data for items
-            let items = [
+            // Default values
+            const DEFAULT_BUSINESS_NAME = "Susara Creations";
+            const DEFAULT_BUSINESS_ADDRESS = "Colombo, Sri Lanka";
+            const DEFAULT_BUSINESS_CONTACT = "0716843378 | susarastreams@gmail.com";
+            const DEFAULT_TAX_RATE = 0;
+            const DEFAULT_ITEMS = [
                 { id: 1, description: 'Product A', quantity: 1, unitPrice: 1000 },
                 { id: 2, description: 'Service B', quantity: 2, unitPrice: 500 },
             ];
+
+            let items = []; // Initialize empty, will be loaded from LocalStorage or default
 
             // Function to format currency
             const formatCurrency = (amount) => {
@@ -271,6 +299,7 @@
                     `;
                     itemsTableBody.appendChild(row);
                 });
+                saveAllData(); // Save data after rendering items
             };
 
             // Function to handle changes in item fields
@@ -278,19 +307,59 @@
                 items = items.map(item =>
                     item.id === id ? { ...item, [field]: field === 'description' ? value : parseFloat(value) || 0 } : item
                 );
-                renderItems(); // Re-render to update totals
+                renderItems(); // Re-render to update totals and save
             };
 
             // Function to add a new item
             addItemBtn.addEventListener('click', () => {
                 items.push({ id: Date.now(), description: '', quantity: 1, unitPrice: 0 });
-                renderItems();
+                renderItems(); // Re-render to update and save
             });
 
             // Function to remove an item
             window.handleRemoveItem = (id) => {
                 items = items.filter(item => item.id !== id);
-                renderItems();
+                renderItems(); // Re-render to update and save
+            };
+
+            // --- LocalStorage Save/Load Logic ---
+            const saveAllData = () => {
+                const data = {
+                    businessName: businessNameInput.value,
+                    businessAddress: businessAddressInput.value,
+                    businessContact: businessContactInput.value,
+                    customerName: customerNameInput.value,
+                    customerPhone: customerPhoneInput.value,
+                    taxRate: taxRateInput.value,
+                    paymentMethod: paymentMethodSelect.value,
+                    items: items // items array
+                };
+                localStorage.setItem('receiptAppData', JSON.stringify(data));
+                console.log('App data saved to LocalStorage.');
+            };
+
+            const loadAllData = () => {
+                const savedData = localStorage.getItem('receiptAppData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    businessNameInput.value = data.businessName || DEFAULT_BUSINESS_NAME;
+                    businessAddressInput.value = data.businessAddress || DEFAULT_BUSINESS_ADDRESS;
+                    businessContactInput.value = data.businessContact || DEFAULT_BUSINESS_CONTACT;
+                    customerNameInput.value = data.customerName || '';
+                    customerPhoneInput.value = data.customerPhone || '';
+                    taxRateInput.value = data.taxRate || DEFAULT_TAX_RATE;
+                    paymentMethodSelect.value = data.paymentMethod || 'Cash';
+                    items = data.items || DEFAULT_ITEMS; // Load saved items or use default
+                } else {
+                    // Set default values if no data in localStorage
+                    businessNameInput.value = DEFAULT_BUSINESS_NAME;
+                    businessAddressInput.value = DEFAULT_BUSINESS_ADDRESS;
+                    businessContactInput.value = DEFAULT_BUSINESS_CONTACT;
+                    taxRateInput.value = DEFAULT_TAX_RATE;
+                    paymentMethodSelect.value = 'Cash';
+                    items = DEFAULT_ITEMS;
+                }
+                renderItems(); // Render items after loading
             };
 
             // --- Receipt Number Logic ---
@@ -306,31 +375,45 @@
             const updateReceiptNumber = () => {
                 const nextReceiptNum = getNextReceiptNumber();
                 receiptNumberInput.value = nextReceiptNum;
+                // No need to save lastReceiptNumber here; it's saved after print/download
             };
 
-            // Set current date and time and initial receipt number
+            // Function to update the time input field
+            const updateTimeInput = () => {
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2, '0');
+                const min = String(now.getMinutes()).padStart(2, '0');
+                receiptTimeInput.value = `${hh}:${min}`;
+            };
+
+            // Set current date and initial receipt number
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const yyyy = today.getFullYear(); 
-            const hh = String(today.getHours()).padStart(2, '0');
-            const min = String(today.getMinutes()).padStart(2, '0');
 
             receiptDateInput.value = `${yyyy}-${mm}-${dd}`;
-            receiptTimeInput.value = `${hh}:${min}`;
             updateReceiptNumber(); // Set the sequential receipt number on load
+            updateTimeInput(); // Set initial time
+            setInterval(updateTimeInput, 1000); // Update time every second
 
-            // Handle print functionality
-            printReceiptBtn.addEventListener('click', () => {
-                console.log('Print receipt initiated.'); // Debugging log for print button
+            // Add input listeners for saving data on change
+            businessNameInput.addEventListener('input', saveAllData);
+            businessAddressInput.addEventListener('input', saveAllData);
+            businessContactInput.addEventListener('input', saveAllData);
+            customerNameInput.addEventListener('input', saveAllData);
+            customerPhoneInput.addEventListener('input', saveAllData);
+            taxRateInput.addEventListener('input', saveAllData);
+            paymentMethodSelect.addEventListener('change', saveAllData); // Use 'change' for select element
 
-                // Populate print area with current data
+            // Function to populate the print area with current data
+            const populatePrintArea = () => {
                 document.getElementById('printBusinessName').textContent = businessNameInput.value;
                 document.getElementById('printBusinessAddress').textContent = businessAddressInput.value;
                 document.getElementById('printBusinessContact').textContent = businessContactInput.value;
                 document.getElementById('printReceiptNumber').textContent = receiptNumberInput.value;
                 document.getElementById('printReceiptDate').textContent = receiptDateInput.value;
-                document.getElementById('printReceiptTime').textContent = receiptTimeInput.value;
+                document.getElementById('printReceiptTime').textContent = receiptTimeInput.value; // Get the live updated time
                 document.getElementById('printPaymentMethod').textContent = paymentMethodSelect.value;
 
                 const customerName = customerNameInput.value.trim();
@@ -342,7 +425,6 @@
                     printCustomerNameContainer.classList.add('hide-on-print');
                 }
                 
-                // Handle customer phone number for print
                 const customerPhone = customerPhoneInput.value.trim();
                 const printCustomerPhoneContainer = document.getElementById('printCustomerPhoneContainer');
                 if (customerPhone) {
@@ -351,7 +433,6 @@
                 } else {
                     printCustomerPhoneContainer.classList.add('hide-on-print');
                 }
-
 
                 const printItemsTableBody = document.getElementById('printItemsTableBody');
                 printItemsTableBody.innerHTML = '';
@@ -386,26 +467,66 @@
                 }
                 
                 document.getElementById('printTotal').textContent = formatCurrency(total);
+            };
 
-                // --- NEW PRINT LOGIC ---
+
+            // Handle Download PNG functionality
+            downloadPngBtn.addEventListener('click', () => {
+                console.log('Download PNG initiated.'); 
+                populatePrintArea(); // Ensure print area is populated before generating PNG
+
+                const element = document.getElementById('receiptPrintArea');
+                const receiptNumber = receiptNumberInput.value;
+                const filename = `receipt-${receiptNumber}.png`;
+
+                // Add a small delay to ensure DOM is fully rendered for html2canvas
+                setTimeout(() => {
+                    html2canvas(element, {
+                        scale: 2, // Increase scale for better resolution
+                        useCORS: true, // Enable cross-origin image loading if necessary (not needed for local images)
+                        logging: true // Enable logging for debugging
+                    }).then(canvas => {
+                        const imageDataURL = canvas.toDataURL('image/png'); // Get image data as PNG
+
+                        // Create a temporary link element for download
+                        const link = document.createElement('a');
+                        link.href = imageDataURL;
+                        link.download = filename;
+                        document.body.appendChild(link); // Append to body (required for Firefox)
+                        link.click(); // Programmatically click the link to trigger download
+                        document.body.removeChild(link); // Clean up the temporary link
+
+                        console.log('PNG generated and downloaded.');
+                        // Increment receipt number and save to localStorage AFTER successful PNG generation
+                        let currentReceiptNum = parseInt(receiptNumber.replace('REC-', ''));
+                        localStorage.setItem('lastReceiptNumber', currentReceiptNum);
+                        updateReceiptNumber(); // Update the input field for next receipt
+                    }).catch(error => {
+                        console.error('Error generating PNG:', error);
+                        alert('PNG generation failed. Please try "Print Receipt (Browser Dialog)" option.');
+                    });
+                }, 100); // 100ms delay
+            });
+
+            // Handle Print (Browser Dialog) functionality
+            printBrowserBtn.addEventListener('click', () => {
+                console.log('Print (Browser Dialog) initiated.'); 
+                populatePrintArea(); // Ensure print area is populated before printing
+
                 const printContents = document.getElementById('receiptPrintArea').innerHTML;
                 
                 const printWindow = window.open('', '_blank', 'height=600,width=800'); 
                 printWindow.document.write('<html><head><title>Receipt</title>');
-                // Include Tailwind CSS for the print window
                 printWindow.document.write('<script src="https://cdn.tailwindcss.com"><\/script>');
-                // Include the custom print styles
                 printWindow.document.write('<style>');
                 printWindow.document.write(`
                     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
                     body { font-family: 'Inter', sans-serif; margin: 0; padding: 20px; box-sizing: border-box; color: #333; }
-                    .print-area { width: 100%; } /* Ensure print area takes full width in print window */
-                    /* Specific styles for print */
+                    .print-area { width: 100%; }
                     .receipt-header h1 { font-size: 1.8rem !important; }
                     .receipt-details p, .receipt-items table, .receipt-totals p { font-size: 0.9rem !important; }
                     .receipt-items th, .receipt-items td { padding: 4px 2px !important; }
-                    .hide-on-print { display: none !important; } /* Ensure elements explicitly hidden for print stay hidden */
-                    /* Ensure all text is visible in print */
+                    .hide-on-print { display: none !important; }
                     input[type="text"], input[type="number"], select {
                         border: none !important;
                         background: none !important;
@@ -415,7 +536,7 @@
                         color: inherit !important;
                         box-shadow: none !important;
                         outline: none !important;
-                        -webkit-print-color-adjust: exact; /* For better color accuracy in print */
+                        -webkit-print-color-adjust: exact; 
                         color-adjust: exact;
                     }
                 `);
@@ -425,23 +546,16 @@
                 printWindow.document.write('</body></html>');
                 printWindow.document.close(); 
 
-                // Wait for the content to render, then print
                 printWindow.onload = function() {
                     setTimeout(() => {
                         printWindow.focus(); 
                         printWindow.print(); 
-                        
-                        // Increment receipt number and save to localStorage AFTER successful print attempt
-                        let currentReceiptNum = parseInt(receiptNumberInput.value.replace('REC-', ''));
-                        localStorage.setItem('lastReceiptNumber', currentReceiptNum);
-                        updateReceiptNumber(); // Update the input field for next receipt
                     }, 500); 
                 };
-                // --- END NEW PRINT LOGIC ---
             });
 
-            // Initial render of items
-            renderItems();
+            // Load data when the page first loads
+            loadAllData();
         });
     </script>
 </body>
