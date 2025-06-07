@@ -76,7 +76,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
                 <label for="businessName" class="block text-sm font-medium text-gray-700">Business Name</label>
-                <input type="text" id="businessName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="Mama Susara Creations">
+                <input type="text" id="businessName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="Susara Creations">
             </div>
             <div>
                 <label for="businessAddress" class="block text-sm font-medium text-gray-700">Address</label>
@@ -84,7 +84,7 @@
             </div>
             <div class="md:col-span-2">
                 <label for="businessContact" class="block text-sm font-medium text-gray-700">Phone/Email</label>
-                <input type="text" id="businessContact" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="077-1234567 | info@mamasusara.com">
+                <input type="text" id="businessContact" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" value="077-1234567 | info@susaracreations.com">
             </div>
         </div>
 
@@ -97,6 +97,10 @@
             <div>
                 <label for="receiptDate" class="block text-sm font-medium text-gray-700">Date</label>
                 <input type="date" id="receiptDate" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="receiptTime" class="block text-sm font-medium text-gray-700">Time</label>
+                <input type="time" id="receiptTime" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
             </div>
             <div>
                 <label for="customerName" class="block text-sm font-medium text-gray-700">Customer Name (Optional)</label>
@@ -144,6 +148,7 @@
                     <option value="Card">Card</option>
                     <option value="Bank Transfer">Bank Transfer</option>
                     <option value="Mobile Payment">Mobile Payment</option>
+                    <option value="Dialog EZ Cash">Dialog EZ Cash</option>
                 </select>
             </div>
         </div>
@@ -168,6 +173,7 @@
             <div>
                 <p><strong>Receipt Number:</strong> <span id="printReceiptNumber"></span></p>
                 <p><strong>Date:</strong> <span id="printReceiptDate"></span></p>
+                <p><strong>Time:</strong> <span id="printReceiptTime"></span></p>
             </div>
             <div class="text-right">
                 <p id="printCustomerNameContainer" class="hide-on-print"><strong id="printCustomerNameLabel">Customer:</strong> <span id="printCustomerName"></span></p>
@@ -216,6 +222,7 @@
             const businessContactInput = document.getElementById('businessContact');
             const receiptNumberInput = document.getElementById('receiptNumber');
             const receiptDateInput = document.getElementById('receiptDate');
+            const receiptTimeInput = document.getElementById('receiptTime');
             const customerNameInput = document.getElementById('customerName');
             const customerPhoneInput = document.getElementById('customerPhone'); 
             const paymentMethodSelect = document.getElementById('paymentMethod');
@@ -286,13 +293,32 @@
                 renderItems();
             };
 
-            // Set current date and initial receipt number
+            // --- Receipt Number Logic ---
+            const getNextReceiptNumber = () => {
+                let lastNum = localStorage.getItem('lastReceiptNumber');
+                let nextNum = 1;
+                if (lastNum) {
+                    nextNum = parseInt(lastNum) + 1;
+                }
+                return `REC-${String(nextNum).padStart(6, '0')}`; // Format as REC-000001
+            };
+
+            const updateReceiptNumber = () => {
+                const nextReceiptNum = getNextReceiptNumber();
+                receiptNumberInput.value = nextReceiptNum;
+            };
+
+            // Set current date and time and initial receipt number
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const yyyy = today.getFullYear(); 
+            const hh = String(today.getHours()).padStart(2, '0');
+            const min = String(today.getMinutes()).padStart(2, '0');
+
             receiptDateInput.value = `${yyyy}-${mm}-${dd}`;
-            receiptNumberInput.value = `REC-${Date.now().toString().slice(-6)}`;
+            receiptTimeInput.value = `${hh}:${min}`;
+            updateReceiptNumber(); // Set the sequential receipt number on load
 
             // Handle print functionality
             printReceiptBtn.addEventListener('click', () => {
@@ -304,6 +330,7 @@
                 document.getElementById('printBusinessContact').textContent = businessContactInput.value;
                 document.getElementById('printReceiptNumber').textContent = receiptNumberInput.value;
                 document.getElementById('printReceiptDate').textContent = receiptDateInput.value;
+                document.getElementById('printReceiptTime').textContent = receiptTimeInput.value;
                 document.getElementById('printPaymentMethod').textContent = paymentMethodSelect.value;
 
                 const customerName = customerNameInput.value.trim();
@@ -403,6 +430,11 @@
                     setTimeout(() => {
                         printWindow.focus(); 
                         printWindow.print(); 
+                        
+                        // Increment receipt number and save to localStorage AFTER successful print attempt
+                        let currentReceiptNum = parseInt(receiptNumberInput.value.replace('REC-', ''));
+                        localStorage.setItem('lastReceiptNumber', currentReceiptNum);
+                        updateReceiptNumber(); // Update the input field for next receipt
                     }, 500); 
                 };
                 // --- END NEW PRINT LOGIC ---
