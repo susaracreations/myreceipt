@@ -10,9 +10,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Professional Receipt Generator",
   description: "Create, print, download, and share professional receipts instantly.",
-  icons: {
-    icon: "/favicon.png",
-  },
 };
 
 export default function RootLayout({
