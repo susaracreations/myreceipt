@@ -1,26 +1,154 @@
 @import "tailwindcss";
 
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --font-sans: var(--font-sans);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 220 33% 97%;
+  --foreground: 224 71% 4%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 71% 4%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71% 4%;
+  --primary: 271.5 81.3% 55.9%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 220 14.3% 95.9%;
+  --secondary-foreground: 220.9 39.3% 11%;
+  --muted: 220 14.3% 95.9%;
+  --muted-foreground: 220 8.9% 46.1%;
+  --accent: 220 14.3% 95.9%;
+  --accent-foreground: 220.9 39.3% 11%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 271.5 81.3% 55.9%;
+  --radius: 0.75rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
+
+/* Print Area Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 24px;
+    box-sizing: border-box;
+    background-color: white !important;
+    color: black !important;
+  }
+  .hide-on-print {
+    display: none !important;
+  }
+}
+
+/* html2canvas color compatibility overrides (converts oklch/lab colors to rgb/hex) */
+#receiptPrintArea {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+#receiptPrintArea,
+#receiptPrintArea * {
+  /* Prevent any Tailwind variable fallback resolving to oklch/lab in html2canvas */
+  --color-border: #cbd5e1 !important;
+}
+
+#receiptPrintArea .text-purple-700 {
+  color: #7e22ce !important;
+}
+
+#receiptPrintArea .text-purple-800 {
+  color: #6b21a8 !important;
+}
+
+#receiptPrintArea .text-slate-800 {
+  color: #1e293b !important;
+}
+
+#receiptPrintArea .text-slate-500 {
+  color: #64748b !important;
+}
+
+#receiptPrintArea .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+#receiptPrintArea .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+#receiptPrintArea .text-rose-600 {
+  color: #e11d48 !important;
+}
+
+#receiptPrintArea .border-purple-100 {
+  border-color: #f3e8ff !important;
+}
+
+#receiptPrintArea .border-slate-100 {
+  border-color: #f1f5f9 !important;
+}
+
+#receiptPrintArea .border-slate-200 {
+  border-color: #e2e8f0 !important;
+}
+
+#receiptPrintArea .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #f1f5f9 !important;
+}
+
+#receiptPrintArea .bg-gray-100 {
+  background-color: #f3f4f6 !important;
+}
+

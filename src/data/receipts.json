@@ -1,0 +1,33 @@
+{
+  "REC-000001": {
+    "id": "REC-000001",
+    "businessName": "Susara Creations",
+    "businessAddress": "Colombo, Sri Lanka",
+    "businessContact": "0716843378 | susarastreams@gmail.com",
+    "businessLogoUrl": "",
+    "receiptNumber": "REC-000001",
+    "isCustomReceiptNumber": true,
+    "receiptDate": "2026-06-06",
+    "receiptTime": "17:38",
+    "customerName": "",
+    "customerPhone": "",
+    "paymentMethod": "Dialog EZ Cash",
+    "taxRate": 1,
+    "taxType": "percentage",
+    "items": [
+      {
+        "id": 1,
+        "description": "Product A",
+        "quantity": 1,
+        "unitPrice": 1000
+      },
+      {
+        "id": 2,
+        "description": "Service B",
+        "quantity": 3,
+        "unitPrice": 500
+      }
+    ],
+    "createdAt": "2026-06-06T12:13:57.323Z"
+  }
+}
