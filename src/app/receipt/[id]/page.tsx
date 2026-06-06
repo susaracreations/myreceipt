@@ -11,16 +11,35 @@ interface ReceiptPageProps {
 
 async function getReceiptData(id: string): Promise<ReceiptData | null> {
   try {
+    // 1. Try to read from JSON database first (for backward compatibility)
     const filePath = path.join(process.cwd(), "src", "data", "receipts.json")
-    if (!fs.existsSync(filePath)) return null
-
-    const fileContent = fs.readFileSync(filePath, "utf-8")
-    const receipts = JSON.parse(fileContent || "{}")
-    return receipts[id] || null
+    if (fs.existsSync(filePath)) {
+      const fileContent = fs.readFileSync(filePath, "utf-8")
+      const receipts = JSON.parse(fileContent || "{}")
+      if (receipts[id]) {
+        return receipts[id]
+      }
+    }
   } catch (error) {
     console.error("Error reading receipt from JSON database:", error)
-    return null
   }
+
+  // 2. Try to decode from URL-safe base64 if not found in database
+  try {
+    let base64 = id.replace(/-/g, "+").replace(/_/g, "/")
+    while (base64.length % 4) {
+      base64 += "="
+    }
+    const jsonStr = Buffer.from(base64, "base64").toString("utf-8")
+    const data = JSON.parse(jsonStr)
+    if (data && typeof data === "object" && data.businessName && Array.isArray(data.items)) {
+      return data as ReceiptData
+    }
+  } catch (e) {
+    // Not a valid base64 or JSON
+  }
+
+  return null
 }
 
 export async function generateMetadata({ params }: ReceiptPageProps) {

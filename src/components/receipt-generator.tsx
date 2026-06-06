@@ -215,9 +215,35 @@ export function ReceiptGenerator() {
     }
   }
 
+  const encodeReceiptData = (receipt: ReceiptData) => {
+    const jsonStr = JSON.stringify(receipt)
+    const base64 = btoa(unescape(encodeURIComponent(jsonStr)))
+    return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
+  }
+
   const handleShare = async () => {
     if (!data) return
     setIsSaving(true)
+    
+    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    const origin = window.location.origin
+
+    if (!isLocal) {
+      // Deployed to production (Vercel, etc.). Use the URL-encoded link for guaranteed persistence
+      try {
+        const encoded = encodeReceiptData(data)
+        setShareUrl(`${origin}/receipt/${encoded}`)
+        setIsShareModalOpen(true)
+      } catch (error) {
+        console.error("Error encoding receipt:", error)
+        alert("An error occurred while sharing the receipt.")
+      } finally {
+        setIsSaving(false)
+      }
+      return
+    }
+
+    // Local development: use the local JSON database API
     try {
       const response = await fetch("/api/receipt", {
         method: "POST",
@@ -228,15 +254,20 @@ export function ReceiptGenerator() {
       })
       const result = await response.json()
       if (result.success) {
-        const origin = window.location.origin
         setShareUrl(`${origin}/receipt/${result.id}`)
         setIsShareModalOpen(true)
       } else {
-        alert("Failed to save receipt. Please try again.")
+        // Fallback if API fails locally
+        const encoded = encodeReceiptData(data)
+        setShareUrl(`${origin}/receipt/${encoded}`)
+        setIsShareModalOpen(true)
       }
     } catch (error) {
-      console.error("Error sharing receipt:", error)
-      alert("An error occurred while sharing the receipt.")
+      console.error("Error sharing receipt locally:", error)
+      // Fallback
+      const encoded = encodeReceiptData(data)
+      setShareUrl(`${origin}/receipt/${encoded}`)
+      setIsShareModalOpen(true)
     } finally {
       setIsSaving(false)
     }
